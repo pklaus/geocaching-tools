@@ -1,0 +1,184 @@
+#!/usr/bin/python
+#
+# am2gpx -- convert an Acme Mapper URL to a GPX file
+#
+# Version 1.0, 5-Dec-2007
+#
+# See http://mapper.acme.com/ .
+#
+# Copyright (c) 2007 Brian "Beej Jorgensen" Hall <beej@beej.us>
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+import sys
+import os.path
+import getopt
+import urllib
+import re
+
+class AppContext(object):
+	def __init__(self, argv):
+		self.scriptname = os.path.basename(argv[0])
+		self.outfilename = '-'
+		self.infilename = '-'
+		self.prefix = ''
+		self.numeric = False
+		self.zerobased = False
+		self.symbol = 'Dot'
+		self.url = None
+
+		try:
+			opts, args = getopt.gnu_getopt(argv[1:], 'ho:p:n0s:u:', \
+					['help', 'prefix=', 'numeric', 'zerobased', \
+					'url=', 'symbol=', 'outfile='])
+
+		except getopt.GetoptError:
+			self.usageExit()
+
+		for o, a in opts:
+			if o in ('-h', '--help'):
+				self.usageExit()
+
+			elif o in ('-o', '--outfile'):
+				self.outfilename = a
+
+			elif o in ('-p', '--prefix'):
+				self.prefix = a
+
+			elif o in ('-n', '--numeric'):
+				self.numeric = True
+
+			elif o in ('-0', '--zerobased'):
+				self.numeric = True
+				self.zerobased = True
+
+			elif o in ('-s', '--symbol'):
+				self.symbol = a
+
+			elif o in ('-u', '--url'):
+				self.url = a
+
+		if len(args) == 1:
+			if self.url != None:
+				self.warn('already specified a URL with -u--ignoring input file')
+			else:
+				self.infilename = args[0]
+		elif len(args) != 0:
+			self.usageExit()
+
+
+	def usageExit(self, str=None, status=1):
+		if str != None:
+			sys.stderr.write('%s: %s\n' % (self.scriptname, str))
+		else:
+			sys.stderr.write( \
+"""usage: %s [options] [infile]
+
+   -u  --url=URL                specify the Acme Mapper url
+   -o  --outfile=FILENAME       set output file name
+   -p  --prefix=PREFIX          prefix to be applied to all waypoint names
+   -s  --symbol=SYMBOL          specify a waypoint symbol to use
+   -n  --numeric                use numbers instead of letters for waypoints
+   -0  --zerobased              use zero-based numbers (implies -n)
+   -h  --help                   usage help
+
+""" % (self.scriptname))
+
+		sys.exit(status)
+
+	def warn(self, str):
+		sys.stderr.write('%s: warning: %s\n' % (self.scriptname, str))
+
+#---------------------------------------------------------------------
+def getUrl(ac):
+	if ac.url != None:
+		return ac.url
+
+	if ac.infilename == '-':
+		infile = sys.stdin
+	else:
+		infile = file(ac.infilename)
+
+	url = infile.readline().strip()
+
+	if infile != sys.stdin:
+		infile.close()
+
+	return url
+
+#---------------------------------------------------------------------
+def url2gpx(ac, url):
+	if ac.outfilename == '-':
+		outfile = sys.stdout
+	else:
+		outfile = file(ac.outfilename, 'w')
+
+	outfile.write("""<?xml version="1.0"?>
+<gpx version="1.0" creator="%s" xmlns="http://www.topografix.com/GPX/1/0">
+""" % (ac.scriptname))
+
+	try:
+		i = url.index('?')
+		url = url[i+1:]
+	except:
+		ac.usageExit("url missing query string")
+	
+	varmap = {}
+	for p in url.split('&'):
+		var, value = p.split('=')
+		if var[:6] == 'marker':
+			varmap[var] = urllib.unquote_plus(value)
+
+	for name in varmap:
+		lat, lon, desc = varmap[name].split(',', 2)
+		if ac.numeric:
+			if ac.zerobased:
+				base = '0'
+			else:
+				base = '1'
+			outname = chr(int(name[6:]) + ord(base))
+		else:
+			outname = chr(int(name[6:]) + ord('A'))
+		desc = re.sub(r'\\(.)', r'\1', desc)
+		outfile.write('<wpt lat="%s" lon="%s">\n' % (lat, lon))
+		outfile.write('\t<name>%s%s</name>\n' % (ac.prefix, outname))
+		outfile.write('\t<sym>%s</sym>\n' % ac.symbol)
+		outfile.write('\t<desc>%s</desc>\n' % desc)
+		outfile.write('</wpt>\n')
+		
+	outfile.write('</gpx>\n')
+
+	if outfile != sys.stdout:
+		outfile.close()
+
+#---------------------------------------------------------------------
+def main(argv):
+	ac = AppContext(argv)
+
+	url = getUrl(ac)
+
+	url2gpx(ac, url)
+
+	return 0
+
+#---------------------------------------------------------------------
+if __name__ == "__main__": sys.exit(main(sys.argv))
+
