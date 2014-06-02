@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # am2gpx -- convert an Acme Mapper URL to a GPX file
 #
@@ -35,61 +35,61 @@ import urllib
 import re
 
 class AppContext(object):
-	def __init__(self, argv):
-		self.scriptname = os.path.basename(argv[0])
-		self.outfilename = '-'
-		self.infilename = '-'
-		self.prefix = ''
-		self.numeric = False
-		self.zerobased = False
-		self.symbol = 'Dot'
-		self.url = None
+    def __init__(self, argv):
+        self.scriptname = os.path.basename(argv[0])
+        self.outfilename = '-'
+        self.infilename = '-'
+        self.prefix = ''
+        self.numeric = False
+        self.zerobased = False
+        self.symbol = 'Dot'
+        self.url = None
 
-		try:
-			opts, args = getopt.gnu_getopt(argv[1:], 'ho:p:n0s:u:', \
-					['help', 'prefix=', 'numeric', 'zerobased', \
-					'url=', 'symbol=', 'outfile='])
+        try:
+            opts, args = getopt.gnu_getopt(argv[1:], 'ho:p:n0s:u:', \
+                    ['help', 'prefix=', 'numeric', 'zerobased', \
+                    'url=', 'symbol=', 'outfile='])
 
-		except getopt.GetoptError:
-			self.usageExit()
+        except getopt.GetoptError:
+            self.usageExit()
 
-		for o, a in opts:
-			if o in ('-h', '--help'):
-				self.usageExit()
+        for o, a in opts:
+            if o in ('-h', '--help'):
+                self.usageExit()
 
-			elif o in ('-o', '--outfile'):
-				self.outfilename = a
+            elif o in ('-o', '--outfile'):
+                self.outfilename = a
 
-			elif o in ('-p', '--prefix'):
-				self.prefix = a
+            elif o in ('-p', '--prefix'):
+                self.prefix = a
 
-			elif o in ('-n', '--numeric'):
-				self.numeric = True
+            elif o in ('-n', '--numeric'):
+                self.numeric = True
 
-			elif o in ('-0', '--zerobased'):
-				self.numeric = True
-				self.zerobased = True
+            elif o in ('-0', '--zerobased'):
+                self.numeric = True
+                self.zerobased = True
 
-			elif o in ('-s', '--symbol'):
-				self.symbol = a
+            elif o in ('-s', '--symbol'):
+                self.symbol = a
 
-			elif o in ('-u', '--url'):
-				self.url = a
+            elif o in ('-u', '--url'):
+                self.url = a
 
-		if len(args) == 1:
-			if self.url != None:
-				self.warn('already specified a URL with -u--ignoring input file')
-			else:
-				self.infilename = args[0]
-		elif len(args) != 0:
-			self.usageExit()
+        if len(args) == 1:
+            if self.url != None:
+                self.warn('already specified a URL with -u--ignoring input file')
+            else:
+                self.infilename = args[0]
+        elif len(args) != 0:
+            self.usageExit()
 
 
-	def usageExit(self, str=None, status=1):
-		if str != None:
-			sys.stderr.write('%s: %s\n' % (self.scriptname, str))
-		else:
-			sys.stderr.write( \
+    def usageExit(self, str=None, status=1):
+        if str != None:
+            sys.stderr.write('%s: %s\n' % (self.scriptname, str))
+        else:
+            sys.stderr.write( \
 """usage: %s [options] [infile]
 
    -u  --url=URL                specify the Acme Mapper url
@@ -102,82 +102,82 @@ class AppContext(object):
 
 """ % (self.scriptname))
 
-		sys.exit(status)
+        sys.exit(status)
 
-	def warn(self, str):
-		sys.stderr.write('%s: warning: %s\n' % (self.scriptname, str))
+    def warn(self, str):
+        sys.stderr.write('%s: warning: %s\n' % (self.scriptname, str))
 
 #---------------------------------------------------------------------
 def getUrl(ac):
-	if ac.url != None:
-		return ac.url
+    if ac.url != None:
+        return ac.url
 
-	if ac.infilename == '-':
-		infile = sys.stdin
-	else:
-		infile = file(ac.infilename)
+    if ac.infilename == '-':
+        infile = sys.stdin
+    else:
+        infile = file(ac.infilename)
 
-	url = infile.readline().strip()
+    url = infile.readline().strip()
 
-	if infile != sys.stdin:
-		infile.close()
+    if infile != sys.stdin:
+        infile.close()
 
-	return url
+    return url
 
 #---------------------------------------------------------------------
 def url2gpx(ac, url):
-	if ac.outfilename == '-':
-		outfile = sys.stdout
-	else:
-		outfile = file(ac.outfilename, 'w')
+    if ac.outfilename == '-':
+        outfile = sys.stdout
+    else:
+        outfile = file(ac.outfilename, 'w')
 
-	outfile.write("""<?xml version="1.0"?>
+    outfile.write("""<?xml version="1.0"?>
 <gpx version="1.0" creator="%s" xmlns="http://www.topografix.com/GPX/1/0">
 """ % (ac.scriptname))
 
-	try:
-		i = url.index('?')
-		url = url[i+1:]
-	except:
-		ac.usageExit("url missing query string")
-	
-	varmap = {}
-	for p in url.split('&'):
-		var, value = p.split('=')
-		if var[:6] == 'marker':
-			varmap[var] = urllib.unquote_plus(value)
+    try:
+        i = url.index('?')
+        url = url[i+1:]
+    except:
+        ac.usageExit("url missing query string")
+    
+    varmap = {}
+    for p in url.split('&'):
+        var, value = p.split('=')
+        if var[:6] == 'marker':
+            varmap[var] = urllib.unquote_plus(value)
 
-	for name in varmap:
-		lat, lon, desc = varmap[name].split(',', 2)
-		if ac.numeric:
-			if ac.zerobased:
-				base = '0'
-			else:
-				base = '1'
-			outname = chr(int(name[6:]) + ord(base))
-		else:
-			outname = chr(int(name[6:]) + ord('A'))
-		desc = re.sub(r'\\(.)', r'\1', desc)
-		outfile.write('<wpt lat="%s" lon="%s">\n' % (lat, lon))
-		outfile.write('\t<name>%s%s</name>\n' % (ac.prefix, outname))
-		outfile.write('\t<sym>%s</sym>\n' % ac.symbol)
-		outfile.write('\t<desc>%s</desc>\n' % desc)
-		outfile.write('</wpt>\n')
-		
-	outfile.write('</gpx>\n')
+    for name in varmap:
+        lat, lon, desc = varmap[name].split(',', 2)
+        if ac.numeric:
+            if ac.zerobased:
+                base = '0'
+            else:
+                base = '1'
+            outname = chr(int(name[6:]) + ord(base))
+        else:
+            outname = chr(int(name[6:]) + ord('A'))
+        desc = re.sub(r'\\(.)', r'\1', desc)
+        outfile.write('<wpt lat="%s" lon="%s">\n' % (lat, lon))
+        outfile.write('\t<name>%s%s</name>\n' % (ac.prefix, outname))
+        outfile.write('\t<sym>%s</sym>\n' % ac.symbol)
+        outfile.write('\t<desc>%s</desc>\n' % desc)
+        outfile.write('</wpt>\n')
+        
+    outfile.write('</gpx>\n')
 
-	if outfile != sys.stdout:
-		outfile.close()
+    if outfile != sys.stdout:
+        outfile.close()
 
 #---------------------------------------------------------------------
 def main(argv):
-	ac = AppContext(argv)
+    ac = AppContext(argv)
 
-	url = getUrl(ac)
+    url = getUrl(ac)
 
-	url2gpx(ac, url)
+    url2gpx(ac, url)
 
-	return 0
+    return 0
 
 #---------------------------------------------------------------------
 if __name__ == "__main__": sys.exit(main(sys.argv))

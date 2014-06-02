@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # convert gpspoint files to GPX
 #
@@ -13,265 +13,265 @@ import string
 import time
 
 class Metadata:
-	inputFilename = None
-	outputFilename = None
-	inputFile = None
-	outputFile = None
-	creator = "gp2gpx"
-	normalize = 1
+    inputFilename = None
+    outputFilename = None
+    inputFile = None
+    outputFile = None
+    creator = "gp2gpx"
+    normalize = 1
 
 #=========================================================================
 # UnixToIso8601
 #=========================================================================
 def UnixToIso8601(unixtime):
-	return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(unixtime))
-	
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(unixtime))
+    
 #=========================================================================
 # Usage
 #=========================================================================
 def Usage():
-	sys.stderr.write("gp2gpx [gp_file] [-o gpx_file] [-c creator] [-n]\n\n")
-	sys.stderr.write("     -o    output file name\n")
-	sys.stderr.write("     -n    do not normalize waypoint symbols\n")
-	sys.exit(1)
+    sys.stderr.write("gp2gpx [gp_file] [-o gpx_file] [-c creator] [-n]\n\n")
+    sys.stderr.write("     -o    output file name\n")
+    sys.stderr.write("     -n    do not normalize waypoint symbols\n")
+    sys.exit(1)
 
 #=========================================================================
 # ParseCommandLine
 #=========================================================================
 def ParseCommandline(md):
-	sys.argv.pop(0) # throw away the script name
+    sys.argv.pop(0) # throw away the script name
 
-	while len(sys.argv) > 0:
-		if sys.argv[0] == "-h" or sys.argv[0] == "-?" or \
-				sys.argv[0] == "--help" or sys.argv[0] == "-H":
-			Usage()
-		elif sys.argv[0] == "-o":
-			if len(sys.argv) == 1: Usage()
-			sys.argv.pop(0)
-			md.outputFilename = sys.argv[0]
-		elif sys.argv[0] == "-c":
-			if len(sys.argv) == 1: Usage()
-			sys.argv.pop(0)
-			md.creator = sys.argv[0]
-		elif sys.argv[0] == "-n":
-			md.normalize = 0
-		else:
-			if md.inputFilename == None:
-				md.inputFilename = sys.argv[0]
-			else:
-				Usage()
-			
-		sys.argv.pop(0)
+    while len(sys.argv) > 0:
+        if sys.argv[0] == "-h" or sys.argv[0] == "-?" or \
+                sys.argv[0] == "--help" or sys.argv[0] == "-H":
+            Usage()
+        elif sys.argv[0] == "-o":
+            if len(sys.argv) == 1: Usage()
+            sys.argv.pop(0)
+            md.outputFilename = sys.argv[0]
+        elif sys.argv[0] == "-c":
+            if len(sys.argv) == 1: Usage()
+            sys.argv.pop(0)
+            md.creator = sys.argv[0]
+        elif sys.argv[0] == "-n":
+            md.normalize = 0
+        else:
+            if md.inputFilename == None:
+                md.inputFilename = sys.argv[0]
+            else:
+                Usage()
+            
+        sys.argv.pop(0)
 
-	if md.inputFilename == None: md.inputFilename = "-"
-	if md.outputFilename == None: md.outputFilename = "-"
+    if md.inputFilename == None: md.inputFilename = "-"
+    if md.outputFilename == None: md.outputFilename = "-"
 
-	return md
+    return md
 
 #=========================================================================
 # OpenFiles
 #=========================================================================
 def OpenFiles(md):
-	if md.inputFilename == None or md.inputFilename == "-":
-		md.inputFile = sys.stdin
-	else:
-		try:
-			md.inputFile = open(md.inputFilename, "r")
-		except IOError, (errno, strerror):
-			sys.stderr.write("gp2gpx: %s: %s\n" % (md.inputFilename, strerror))
-			sys.exit(2)
+    if md.inputFilename == None or md.inputFilename == "-":
+        md.inputFile = sys.stdin
+    else:
+        try:
+            md.inputFile = open(md.inputFilename, "r")
+        except IOError, (errno, strerror):
+            sys.stderr.write("gp2gpx: %s: %s\n" % (md.inputFilename, strerror))
+            sys.exit(2)
 
-	if md.outputFilename == None or md.outputFilename == "-":
-		md.outputFile = sys.stdout
-	else:
-		try:
-			md.outputFile = open(md.outputFilename, "w")
-		except IOError, (errno, strerror):
-			sys.stderr.write("gp2gpx: %s: %s\n" % (md.outputFilename, strerror))
-			sys.exit(3)
+    if md.outputFilename == None or md.outputFilename == "-":
+        md.outputFile = sys.stdout
+    else:
+        try:
+            md.outputFile = open(md.outputFilename, "w")
+        except IOError, (errno, strerror):
+            sys.stderr.write("gp2gpx: %s: %s\n" % (md.outputFilename, strerror))
+            sys.exit(3)
 
 #=========================================================================
 # FindGPField
 #=========================================================================
 def FindGPField(field, str):
-	r = re.match((".*%s=\"([^\"]*)\"" % field), str);
-	if r != None:
-		val = r.group(1)
-	else:
-		val = None
+    r = re.match((".*%s=\"([^\"]*)\"" % field), str);
+    if r != None:
+        val = r.group(1)
+    else:
+        val = None
 
-	return val
-	
+    return val
+    
 #=========================================================================
 # NormalizeSymbol
 #=========================================================================
 def NormalizeSymbol(sym):
-	if sym == "wpt_dot": return "Dot"
-	elif sym == "amuse_pk": return "Amusement Park"
-	elif sym == "ball": return "Ball Park"
-	elif sym == "dollar": return "Bank"
-	elif sym == "mug": return "Bar"
-	elif sym == "camp": return "Campground"
-	elif sym == "lrg_cty": return "Large City"
-	elif sym == "med_cty": return "Medium City"
-	elif sym == "sml_cty": return "Small City"
-	elif sym == "gas_plus": return "Convenience Store"
-	elif sym == "skull": return "Danger Area"
-	elif sym == "danger": return "Dangerous Area"
-	elif sym == "store": return "Department Store"
-	elif sym == "drinking_wtr": return "Drinking Water"
-	elif sym == "fastfood": return "Fast Food"
-	elif sym == "fish": return "Fishing Area"
-	elif sym == "fitness": return "Fitness Center"
-	elif sym == "fuel": return "Gas Station"
-	elif sym == "glider": return "Glider Area"
-	else:
-		sym2 = sym
-		sym2 = string.upper(sym2[0]) + sym2[1:]
-		re.sub("_", " ", sym2)
-		i = str.find(sym2, " ", 0)
-		while i != -1:
-			sym2 = sym2[0:i+1] + str.upper(sym2[i+1]) + sym2[i+2:]
-			i = str.find(s, " ", i+1)
+    if sym == "wpt_dot": return "Dot"
+    elif sym == "amuse_pk": return "Amusement Park"
+    elif sym == "ball": return "Ball Park"
+    elif sym == "dollar": return "Bank"
+    elif sym == "mug": return "Bar"
+    elif sym == "camp": return "Campground"
+    elif sym == "lrg_cty": return "Large City"
+    elif sym == "med_cty": return "Medium City"
+    elif sym == "sml_cty": return "Small City"
+    elif sym == "gas_plus": return "Convenience Store"
+    elif sym == "skull": return "Danger Area"
+    elif sym == "danger": return "Dangerous Area"
+    elif sym == "store": return "Department Store"
+    elif sym == "drinking_wtr": return "Drinking Water"
+    elif sym == "fastfood": return "Fast Food"
+    elif sym == "fish": return "Fishing Area"
+    elif sym == "fitness": return "Fitness Center"
+    elif sym == "fuel": return "Gas Station"
+    elif sym == "glider": return "Glider Area"
+    else:
+        sym2 = sym
+        sym2 = string.upper(sym2[0]) + sym2[1:]
+        re.sub("_", " ", sym2)
+        i = str.find(sym2, " ", 0)
+        while i != -1:
+            sym2 = sym2[0:i+1] + str.upper(sym2[i+1]) + sym2[i+2:]
+            i = str.find(s, " ", i+1)
 
-		return sym2
+        return sym2
 
 #=========================================================================
 # WriteGPXHeader
 #=========================================================================
 def WriteGPXHeader(md):
-	fout = md.outputFile
-	fout.write("<?xml version=\"1.0\"?>\n")
-	fout.write("\n<gpx version=\"1.1\" creator=\"%s\">\n" % (md.creator))
+    fout = md.outputFile
+    fout.write("<?xml version=\"1.0\"?>\n")
+    fout.write("\n<gpx version=\"1.1\" creator=\"%s\">\n" % (md.creator))
 
 #=========================================================================
 # WriteGPXFooter
 #=========================================================================
 def WriteGPXFooter(md):
-	fout = md.outputFile
-	fout.write("\n</gpx>\n")
+    fout = md.outputFile
+    fout.write("\n</gpx>\n")
 
 #=========================================================================
 # WriteGPXBody
 #=========================================================================
 def WriteGPXBody(md):
-	# modes:
-	# 0 - nostate
-	# 1 - processing waypoint
-	# 2 - processing routes
-	lineNum = 0
-	mode = 0
+    # modes:
+    # 0 - nostate
+    # 1 - processing waypoint
+    # 2 - processing routes
+    lineNum = 0
+    mode = 0
 
-	trackname = ""
+    trackname = ""
 
-	fin = md.inputFile
-	fout = md.outputFile
+    fin = md.inputFile
+    fout = md.outputFile
 
-	for line in fin:
-		lineNum += 1
+    for line in fin:
+        lineNum += 1
 
-		type = FindGPField("type", line);
+        type = FindGPField("type", line);
 
-		if type == None: continue
+        if type == None: continue
 
-		if mode == 0:
-			if type == "waypointlist":
-				mode = 1
-			elif type == "track":
-				trackname = FindGPField("name", line)
-				startedNewTrack = True
-				insegment = False
-				if trackname == None: trackname = "track"
-				fout.write("<trk>\n")
-				fout.write("	<name>%s</name>\n" % trackname)
-				#sys.stderr.write("gp2gpx: warning: tracks not implemented yet--ignoring\n")
-				mode = 2
-			else:
-				sys.stderr.write("%s: unexpected type \"%s\" (line %d)\n" % (md.inputFilename, type, lineNum))
-				sys.exit(4)
+        if mode == 0:
+            if type == "waypointlist":
+                mode = 1
+            elif type == "track":
+                trackname = FindGPField("name", line)
+                startedNewTrack = True
+                insegment = False
+                if trackname == None: trackname = "track"
+                fout.write("<trk>\n")
+                fout.write("\t<name>%s</name>\n" % trackname)
+                #sys.stderr.write("gp2gpx: warning: tracks not implemented yet--ignoring\n")
+                mode = 2
+            else:
+                sys.stderr.write("%s: unexpected type \"%s\" (line %d)\n" % (md.inputFilename, type, lineNum))
+                sys.exit(4)
 
-		elif mode == 1:
-			if type == "waypoint":
-				lat = FindGPField("latitude", line)
-				lon = FindGPField("longitude", line)
-				name = FindGPField("name", line)
-				sym = FindGPField("symbol", line)
-				ele = FindGPField("altitude", line)
+        elif mode == 1:
+            if type == "waypoint":
+                lat = FindGPField("latitude", line)
+                lon = FindGPField("longitude", line)
+                name = FindGPField("name", line)
+                sym = FindGPField("symbol", line)
+                ele = FindGPField("altitude", line)
 
-				if sym != None and md.normalize: sym = NormalizeSymbol(sym)
+                if sym != None and md.normalize: sym = NormalizeSymbol(sym)
 
-				if lat == None or lon == None:
-					sys.stderr.write("%s: missing latitude or longitude (line %d)\n" % (md.inputFilename, lineNum))
-					sys.exit(4)
+                if lat == None or lon == None:
+                    sys.stderr.write("%s: missing latitude or longitude (line %d)\n" % (md.inputFilename, lineNum))
+                    sys.exit(4)
 
-				lat = lat.strip()
-				lon = lon.strip()
+                lat = lat.strip()
+                lon = lon.strip()
 
-				fout.write("\n<wpt lat=\"%s\" lon=\"%s\"" % (lat, lon))
-				if name != None or sym != None or ele != None:
-					fout.write(">\n");
-					if name != None:
-						fout.write("    <name>%s</name>\n" % (name))
-					if sym != None:
-						fout.write("    <sym>%s</sym>\n" % (sym))
-					if ele != None:
-						fout.write("    <ele>%s</ele>\n" % (ele))
-					fout.write("</wpt>\n")
-				else:
-					fout.write("/>\n")
+                fout.write("\n<wpt lat=\"%s\" lon=\"%s\"" % (lat, lon))
+                if name != None or sym != None or ele != None:
+                    fout.write(">\n");
+                    if name != None:
+                        fout.write("    <name>%s</name>\n" % (name))
+                    if sym != None:
+                        fout.write("    <sym>%s</sym>\n" % (sym))
+                    if ele != None:
+                        fout.write("    <ele>%s</ele>\n" % (ele))
+                    fout.write("</wpt>\n")
+                else:
+                    fout.write("/>\n")
 
-			elif type == "waypointlistend":
-				mode = 0
-			else:
-				sys.stderr.write("%s: unexpected type \"%s\" (line %d)\n" % (md.inputFilename, type, lineNum))
-				sys.exit(4)
+            elif type == "waypointlistend":
+                mode = 0
+            else:
+                sys.stderr.write("%s: unexpected type \"%s\" (line %d)\n" % (md.inputFilename, type, lineNum))
+                sys.exit(4)
 
-		elif mode == 2:
-			if type == "trackpoint":
-				lat = FindGPField("latitude", line)
-				lon = FindGPField("longitude", line)
-				ele = FindGPField("altitude", line)
-				unixtime = FindGPField("unixtime", line)
-				newsegment = FindGPField("newsegment", line)
+        elif mode == 2:
+            if type == "trackpoint":
+                lat = FindGPField("latitude", line)
+                lon = FindGPField("longitude", line)
+                ele = FindGPField("altitude", line)
+                unixtime = FindGPField("unixtime", line)
+                newsegment = FindGPField("newsegment", line)
 
-				if newsegment == "yes" or startedNewTrack:
-					if insegment:
-						fout.write("	</trkseg>\n")
-					insegment = True
-					fout.write("	<trkseg>\n")
+                if newsegment == "yes" or startedNewTrack:
+                    if insegment:
+                        fout.write("\t</trkseg>\n")
+                    insegment = True
+                    fout.write("\t<trkseg>\n")
 
-					startedNewTrack = False
+                    startedNewTrack = False
 
-				if not insegment:
-					sys.stderr.write("%s: warning: ignoring track data outside segment (line %d)\n" % (md.inputFilename, lineNum))
-					continue
+                if not insegment:
+                    sys.stderr.write("%s: warning: ignoring track data outside segment (line %d)\n" % (md.inputFilename, lineNum))
+                    continue
 
-				if lat == None or lon == None:
-					sys.stderr.write("%s: missing latitude or longitude (line %d)\n" % (md.inputFilename, lineNum))
-					sys.exit(4)
+                if lat == None or lon == None:
+                    sys.stderr.write("%s: missing latitude or longitude (line %d)\n" % (md.inputFilename, lineNum))
+                    sys.exit(4)
 
-				lat = lat.strip()
-				lon = lon.strip()
+                lat = lat.strip()
+                lon = lon.strip()
 
-				if ele == None: ele = "0"
+                if ele == None: ele = "0"
 
-				fout.write("		<trkpt lat=\"%s\" lon=\"%s\">\n" % (lat, lon))
-				fout.write("		    <ele>%s</ele>\n" % (ele))
-				if unixtime != None:
-					fout.write("		    <time>%s</time>\n" % (UnixToIso8601(float(unixtime))))
-				fout.write("		</trkpt>\n")
+                fout.write("\t\t<trkpt lat=\"%s\" lon=\"%s\">\n" % (lat, lon))
+                fout.write("\t\t\t<ele>%s</ele>\n" % (ele))
+                if unixtime != None:
+                    fout.write("\t\t\t<time>%s</time>\n" % (UnixToIso8601(float(unixtime))))
+                fout.write("\t\t</trkpt>\n")
 
-			elif type == "trackend":
-				if insegment:
-					fout.write("	</trkseg>\n")
-				else:
-					sys.stderr.write("%s: warning: track data has 0 segments (line %d)\n" % (md.inputFilename, lineNum))
+            elif type == "trackend":
+                if insegment:
+                    fout.write("\t</trkseg>\n")
+                else:
+                    sys.stderr.write("%s: warning: track data has 0 segments (line %d)\n" % (md.inputFilename, lineNum))
 
-				fout.write("</trk>\n")
-				mode = 0
-			else:
-				sys.stderr.write("%s: unexpected type \"%s\" (line %d)\n" % (md.inputFilename, type, lineNum))
-				sys.exit(4)
+                fout.write("</trk>\n")
+                mode = 0
+            else:
+                sys.stderr.write("%s: unexpected type \"%s\" (line %d)\n" % (md.inputFilename, type, lineNum))
+                sys.exit(4)
 
 #=========================================================================
 # main

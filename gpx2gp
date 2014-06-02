@@ -1,169 +1,169 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os.path
 import xml.dom.minidom
 
 symbolMap = {
-	"Dot":"wpt_dot",
-	"Amusement Park":"amuse_pk",
-	"Ball Park":"ball",
-	"Bank":"dollar",
-	"Bar":"mug",
-	"Campground":"camp",
-	"Large City":"lrg_cty",
-	"Medium City":"med_cty",
-	"Small City":"sml_cty",
-	"Convenience Store":"gas_plus",
-	"Danger Area":"skull",
-	"Dangerous Area":"danger",
-	"Department Store":"store",
-	"Drinking Water":"drinking_wtr",
-	"Fast Food":"fastfood",
-	"Fishing Area":"fish",
-	"Fitness Center":"fitness",
-	"Gas Station":"fuel",
-	"Glider Area":"glider",
-	"Mine":"mine",
+    "Dot":"wpt_dot",
+    "Amusement Park":"amuse_pk",
+    "Ball Park":"ball",
+    "Bank":"dollar",
+    "Bar":"mug",
+    "Campground":"camp",
+    "Large City":"lrg_cty",
+    "Medium City":"med_cty",
+    "Small City":"sml_cty",
+    "Convenience Store":"gas_plus",
+    "Danger Area":"skull",
+    "Dangerous Area":"danger",
+    "Department Store":"store",
+    "Drinking Water":"drinking_wtr",
+    "Fast Food":"fastfood",
+    "Fishing Area":"fish",
+    "Fitness Center":"fitness",
+    "Gas Station":"fuel",
+    "Glider Area":"glider",
+    "Mine":"mine",
 }
 
 class AppInfo:
-	def __init__(self, argv):
-		self.scriptname = os.path.basename(argv.pop(0))
-		self.outfilename = None
-		self.infilename = None
+    def __init__(self, argv):
+        self.scriptname = os.path.basename(argv.pop(0))
+        self.outfilename = None
+        self.infilename = None
 
-		self.infile = None
-		self.outfile = None
+        self.infile = None
+        self.outfile = None
 
-		while len(argv) > 0:
-			if argv[0] == "-h" or argv[0] == "--help" or argv[0] == "-?":
-				self.usageExit()
+        while len(argv) > 0:
+            if argv[0] == "-h" or argv[0] == "--help" or argv[0] == "-?":
+                self.usageExit()
 
-			elif argv[0] == "-o":
-				argv.pop(0)
-				if len(argv) == 0: self.usageExit()
-				self.outfilename = argv[0]
+            elif argv[0] == "-o":
+                argv.pop(0)
+                if len(argv) == 0: self.usageExit()
+                self.outfilename = argv[0]
 
-			elif self.infilename == None:
-				self.infilename = argv[0]
+            elif self.infilename == None:
+                self.infilename = argv[0]
 
-			argv.pop(0)
+            argv.pop(0)
 
-		if self.infilename == None:
-			self.infile = sys.stdin
-			self.infilename = "<stdin>"
-		else:
-			try:
-				self.infile = file(self.infilename, "r")
-			except IOError, (no, str):
-				self.errorExit("error opening %s: %s" % \
-					(self.infilename, str), 2)
+        if self.infilename == None:
+            self.infile = sys.stdin
+            self.infilename = "<stdin>"
+        else:
+            try:
+                self.infile = file(self.infilename, "r")
+            except IOError, (no, str):
+                self.errorExit("error opening %s: %s" % \
+                    (self.infilename, str), 2)
 
-		try:
-			self.dom = xml.dom.minidom.parse(self.infile)
-		except Exception, (str):
-			self.errorExit("%s: %s" % (self.infilename, str), 4)
+        try:
+            self.dom = xml.dom.minidom.parse(self.infile)
+        except Exception, (str):
+            self.errorExit("%s: %s" % (self.infilename, str), 4)
 
-		if self.outfilename == None:
-			self.outfile = sys.stdout
-			self.outfilename = "<stdout>"
-		else:
-			try:
-				self.outfile = file(self.outfilename, "w")
-			except IOError, (no, str):
-				self.errorExit("error opening %s: %s" % \
-					(self.outfilename, str), 3)
+        if self.outfilename == None:
+            self.outfile = sys.stdout
+            self.outfilename = "<stdout>"
+        else:
+            try:
+                self.outfile = file(self.outfilename, "w")
+            except IOError, (no, str):
+                self.errorExit("error opening %s: %s" % \
+                    (self.outfilename, str), 3)
 
-	def __del__(self):
-		if self.infile != None: self.infile.close()
-		if self.outfile != None: self.outfile.close()
+    def __del__(self):
+        if self.infile != None: self.infile.close()
+        if self.outfile != None: self.outfile.close()
 
-	def errorExit(self, str, status=1):
-		sys.stderr.write("%s: %s\n" % (self.scriptname, str))
-		sys.exit(status)
-		
-	def usageExit(self):
-		sys.stderr.write("usage: %s [-o outfile] [infile]\n" % self.scriptname)
-		sys.exit(1)
+    def errorExit(self, str, status=1):
+        sys.stderr.write("%s: %s\n" % (self.scriptname, str))
+        sys.exit(status)
+        
+    def usageExit(self):
+        sys.stderr.write("usage: %s [-o outfile] [infile]\n" % self.scriptname)
+        sys.exit(1)
 
 def getTextBelow(node, subnodename, handleNone=False):
-	subnodes = node.getElementsByTagName(subnodename)
-	if subnodes != []:
-		return subnodes[0].firstChild.data
-	
-	if handleNone: return ""
+    subnodes = node.getElementsByTagName(subnodename)
+    if subnodes != []:
+        return subnodes[0].firstChild.data
+    
+    if handleNone: return ""
 
-	return None
-		
+    return None
+        
 def symTranslate(name):
-	if not symbolMap.has_key(name): name = "Dot"
-	return symbolMap[name]
+    if not symbolMap.has_key(name): name = "Dot"
+    return symbolMap[name]
 
 def main(argv):
-	ai = AppInfo(argv)
+    ai = AppInfo(argv)
 
-	gpx = ai.dom.firstChild
+    gpx = ai.dom.firstChild
 
-	waypoints = gpx.getElementsByTagName("wpt")
+    waypoints = gpx.getElementsByTagName("wpt")
 
-	if waypoints != []:
-		ai.outfile.write("type=\"waypointlist\"\n")
+    if waypoints != []:
+        ai.outfile.write("type=\"waypointlist\"\n")
 
-		for wp in waypoints:
-			lat = wp.getAttribute("lat")
-			lon = wp.getAttribute("lon")
-			name = getTextBelow(wp, "name", True)
-			sym = getTextBelow(wp, "sym")
-			desc = getTextBelow(wp, "desc")
+        for wp in waypoints:
+            lat = wp.getAttribute("lat")
+            lon = wp.getAttribute("lon")
+            name = getTextBelow(wp, "name", True)
+            sym = getTextBelow(wp, "sym")
+            desc = getTextBelow(wp, "desc")
 
-			str = "type=\"waypoint\" latitude=\"%s\" longitude=\"%s\" " \
-				"name=\"%s\"" % (lat, lon, name)
-			
-			symstr=""
-			descstr=""
+            str = "type=\"waypoint\" latitude=\"%s\" longitude=\"%s\" " \
+                "name=\"%s\"" % (lat, lon, name)
+            
+            symstr=""
+            descstr=""
 
-			if sym != None:
-				symstr = " symbol=\"%s\" display_option=\"symbol+name\"" % \
-					symTranslate(sym)
+            if sym != None:
+                symstr = " symbol=\"%s\" display_option=\"symbol+name\"" % \
+                    symTranslate(sym)
 
-			if desc != None:
-				descstr += " comment=\"%s\"" % desc
+            if desc != None:
+                descstr += " comment=\"%s\"" % desc
 
-			ai.outfile.write("".join((str, symstr, descstr, "\n")))
+            ai.outfile.write("".join((str, symstr, descstr, "\n")))
 
-		ai.outfile.write("type=\"waypointlistend\"\n")
+        ai.outfile.write("type=\"waypointlistend\"\n")
 
-	tracks = gpx.getElementsByTagName("trk")
+    tracks = gpx.getElementsByTagName("trk")
 
-	if tracks != []:
-		for trk in tracks:
-			name = getTextBelow(trk, "name", True)
-			ai.outfile.write("type=\"track\" name=\"%s\"\n" % name)
+    if tracks != []:
+        for trk in tracks:
+            name = getTextBelow(trk, "name", True)
+            ai.outfile.write("type=\"track\" name=\"%s\"\n" % name)
 
-			for seg in trk.getElementsByTagName("trkseg"):
-				newseg = True
-				for trkpt in seg.getElementsByTagName("trkpt"):
-					lat = trkpt.getAttribute("lat")
-					lon = trkpt.getAttribute("lon")
-					ele = getTextBelow(trkpt, "ele")
+            for seg in trk.getElementsByTagName("trkseg"):
+                newseg = True
+                for trkpt in seg.getElementsByTagName("trkpt"):
+                    lat = trkpt.getAttribute("lat")
+                    lon = trkpt.getAttribute("lon")
+                    ele = getTextBelow(trkpt, "ele")
 
-					str = "type=\"trackpoint\" latitude=\"%s\" " \
-						"longitude=\"%s\"" % (lat, lon)
+                    str = "type=\"trackpoint\" latitude=\"%s\" " \
+                        "longitude=\"%s\"" % (lat, lon)
 
-					if newseg:
-						newsegstr = " newsegment=\"yes\""
-						newseg = False
-					else:
-						newsegstr = ""
+                    if newseg:
+                        newsegstr = " newsegment=\"yes\""
+                        newseg = False
+                    else:
+                        newsegstr = ""
 
-					if ele: elestr = " altitude=\"%s\"" % ele
-					else: elestr = ""
+                    if ele: elestr = " altitude=\"%s\"" % ele
+                    else: elestr = ""
 
-					ai.outfile.write("".join((str, elestr, newsegstr, "\n")))
+                    ai.outfile.write("".join((str, elestr, newsegstr, "\n")))
 
-			ai.outfile.write("type=\"trackend\"\n")
-	
-	return 0
+            ai.outfile.write("type=\"trackend\"\n")
+    
+    return 0
 
 if __name__ == "__main__": sys.exit(main(sys.argv))

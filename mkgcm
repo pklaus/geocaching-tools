@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # mkgcm -- make small geocache html files for a big GPX download.
 #
@@ -33,228 +33,228 @@ import xml.dom.minidom
 import re
 
 class Cache(object):
-	def __init__(self):
-		self.lat = None
-		self.lon = None
-		self.id = None
-		self.desc = None
-		self.url = None
-		self.type = None
-		self.name = None
-		self.owner = None
-		self.container = None
-		self.difficulty = None
-		self.terrain = None
-		self.shortdesc = None
-		self.longdesc = None
-		self.available = True
-		self.archived = False
-		self.hints = None
-		self.logs = []
-		self.travelbugs = []
+    def __init__(self):
+        self.lat = None
+        self.lon = None
+        self.id = None
+        self.desc = None
+        self.url = None
+        self.type = None
+        self.name = None
+        self.owner = None
+        self.container = None
+        self.difficulty = None
+        self.terrain = None
+        self.shortdesc = None
+        self.longdesc = None
+        self.available = True
+        self.archived = False
+        self.hints = None
+        self.logs = []
+        self.travelbugs = []
 
 class AppInfo(object):
-	def __init__(self):
-		self.outdirname = "."
-		self.infilename = None
-		self.indexfilename = None
-		self.indextitle = None
-		self.dom = None
+    def __init__(self):
+        self.outdirname = "."
+        self.infilename = None
+        self.indexfilename = None
+        self.indextitle = None
+        self.dom = None
 
 def usageExit():
-	sys.stderr.write("usage: mkgcm [-i indexfile] [-it indextitle] [-o outdir] infile\n")
-	sys.exit(1)
+    sys.stderr.write("usage: mkgcm [-i indexfile] [-it indextitle] [-o outdir] infile\n")
+    sys.exit(1)
 
 def parseCommandLine(argv):
-	argv.pop(0)
-	ai = AppInfo()
+    argv.pop(0)
+    ai = AppInfo()
 
-	while len(argv) > 0:
-		if argv[0] == "-?" or argv[0] == "-h" or argv[0] == "--help":
-			usageExit()
-		elif argv[0] == "-o":
-			if len(argv) == 1: usageExit()
-			argv.pop(0)
-			ai.outdirname = argv[0]
-		elif argv[0] == "-i":
-			if len(argv) == 1: usageExit()
-			argv.pop(0)
-			ai.indexfilename = argv[0]
-		elif argv[0] == "-it":
-			if len(argv) == 1: usageExit()
-			argv.pop(0)
-			ai.indextitle = argv[0]
-		elif ai.infilename == None:
-			ai.infilename = argv[0]
-		else:
-			usageExit()
+    while len(argv) > 0:
+        if argv[0] == "-?" or argv[0] == "-h" or argv[0] == "--help":
+            usageExit()
+        elif argv[0] == "-o":
+            if len(argv) == 1: usageExit()
+            argv.pop(0)
+            ai.outdirname = argv[0]
+        elif argv[0] == "-i":
+            if len(argv) == 1: usageExit()
+            argv.pop(0)
+            ai.indexfilename = argv[0]
+        elif argv[0] == "-it":
+            if len(argv) == 1: usageExit()
+            argv.pop(0)
+            ai.indextitle = argv[0]
+        elif ai.infilename == None:
+            ai.infilename = argv[0]
+        else:
+            usageExit()
 
-		argv.pop(0)
+        argv.pop(0)
 
-	if ai.infilename == None:
-		usageExit()
+    if ai.infilename == None:
+        usageExit()
 
-	if ai.indextitle == None:
-		ai.indextitle = ai.infilename
-	
-	return ai
+    if ai.indextitle == None:
+        ai.indextitle = ai.infilename
+    
+    return ai
 
 def textUnder(node):
-	text = ""
-	for n in node.childNodes:
-		if n.nodeType == n.TEXT_NODE:
-			text = text + n.data
+    text = ""
+    for n in node.childNodes:
+        if n.nodeType == n.TEXT_NODE:
+            text = text + n.data
 
-	return text
+    return text
 
 def buildCacheList(dom):
-	dom = dom.firstChild  # <gpx>
-	cacheList = []
-	for wpt in dom.getElementsByTagName("wpt"): # all <wpt> elements
-		cache = Cache()
-		cache.lat = wpt.getAttribute("lat")
-		cache.lon = wpt.getAttribute("lon")
-		cache.id = textUnder(wpt.getElementsByTagName("name")[0])
-		cache.url = textUnder(wpt.getElementsByTagName("url")[0])
-		gs = wpt.getElementsByTagName("groundspeak:cache")[0]
-		cache.available = (gs.getAttribute("available") == "True")
-		cache.archived = (gs.getAttribute("archived") == "True")
-		cache.container = textUnder(gs.getElementsByTagName("groundspeak:container")[0])
-		cache.owner = textUnder(gs.getElementsByTagName("groundspeak:owner")[0])
-		cache.name = textUnder(gs.getElementsByTagName("groundspeak:name")[0])
-		cache.type = textUnder(gs.getElementsByTagName("groundspeak:type")[0])
-		cache.difficulty = textUnder(gs.getElementsByTagName("groundspeak:difficulty")[0])
-		cache.terrain = textUnder(gs.getElementsByTagName("groundspeak:terrain")[0])
-		cache.shortdesc = textUnder(gs.getElementsByTagName("groundspeak:short_description")[0])
-		cache.longdesc = textUnder(gs.getElementsByTagName("groundspeak:long_description")[0])
-		cache.hints = textUnder(gs.getElementsByTagName("groundspeak:encoded_hints")[0]).strip()
+    dom = dom.firstChild  # <gpx>
+    cacheList = []
+    for wpt in dom.getElementsByTagName("wpt"): # all <wpt> elements
+        cache = Cache()
+        cache.lat = wpt.getAttribute("lat")
+        cache.lon = wpt.getAttribute("lon")
+        cache.id = textUnder(wpt.getElementsByTagName("name")[0])
+        cache.url = textUnder(wpt.getElementsByTagName("url")[0])
+        gs = wpt.getElementsByTagName("groundspeak:cache")[0]
+        cache.available = (gs.getAttribute("available") == "True")
+        cache.archived = (gs.getAttribute("archived") == "True")
+        cache.container = textUnder(gs.getElementsByTagName("groundspeak:container")[0])
+        cache.owner = textUnder(gs.getElementsByTagName("groundspeak:owner")[0])
+        cache.name = textUnder(gs.getElementsByTagName("groundspeak:name")[0])
+        cache.type = textUnder(gs.getElementsByTagName("groundspeak:type")[0])
+        cache.difficulty = textUnder(gs.getElementsByTagName("groundspeak:difficulty")[0])
+        cache.terrain = textUnder(gs.getElementsByTagName("groundspeak:terrain")[0])
+        cache.shortdesc = textUnder(gs.getElementsByTagName("groundspeak:short_description")[0])
+        cache.longdesc = textUnder(gs.getElementsByTagName("groundspeak:long_description")[0])
+        cache.hints = textUnder(gs.getElementsByTagName("groundspeak:encoded_hints")[0]).strip()
 
-		logparent = gs.getElementsByTagName("groundspeak:logs")[0]
-		for l in logparent.getElementsByTagName("groundspeak:log"):
-			date = textUnder(l.getElementsByTagName("groundspeak:date")[0])
-			date = date.split("T")[0]
-			type = textUnder(l.getElementsByTagName("groundspeak:type")[0])
-			finder = textUnder(l.getElementsByTagName("groundspeak:finder")[0])
-			cache.logs.append("%s: %s (%s)" % (date, type, finder))
+        logparent = gs.getElementsByTagName("groundspeak:logs")[0]
+        for l in logparent.getElementsByTagName("groundspeak:log"):
+            date = textUnder(l.getElementsByTagName("groundspeak:date")[0])
+            date = date.split("T")[0]
+            type = textUnder(l.getElementsByTagName("groundspeak:type")[0])
+            finder = textUnder(l.getElementsByTagName("groundspeak:finder")[0])
+            cache.logs.append("%s: %s (%s)" % (date, type, finder))
 
-		tbparent = gs.getElementsByTagName("groundspeak:travelbugs")[0]
-		for b in tbparent.getElementsByTagName("groundspeak:travelbug"):
-			ref = b.getAttribute("ref")
-			name = textUnder(b.getElementsByTagName("groundspeak:name")[0])
+        tbparent = gs.getElementsByTagName("groundspeak:travelbugs")[0]
+        for b in tbparent.getElementsByTagName("groundspeak:travelbug"):
+            ref = b.getAttribute("ref")
+            name = textUnder(b.getElementsByTagName("groundspeak:name")[0])
 
-			cache.travelbugs.append("%s (%s)" % (name, ref))
+            cache.travelbugs.append("%s (%s)" % (name, ref))
 
-		cacheList.append(cache)
+        cacheList.append(cache)
 
-	return cacheList
+    return cacheList
 
 def ll2hm(llstr, isLat):
-	llfloat = float(llstr)
+    llfloat = float(llstr)
 
-	if llfloat < 0:
-		llfloat = -llfloat
-		if isLat: dir = "S"
-		else: dir = "W"
-	else:
-		if isLat: dir = "N"
-		else: dir = "E"
+    if llfloat < 0:
+        llfloat = -llfloat
+        if isLat: dir = "S"
+        else: dir = "W"
+    else:
+        if isLat: dir = "N"
+        else: dir = "E"
 
-	lldeg = int(llfloat)
-	llmin = (llfloat - lldeg) * 60
+    lldeg = int(llfloat)
+    llmin = (llfloat - lldeg) * 60
 
-	return "%s %d&deg; %.3f'" % (dir, lldeg, llmin)
+    return "%s %d&deg; %.3f'" % (dir, lldeg, llmin)
 
 def writeFiles(cacheList):
-	for c in cacheList:
-		fp = file("%s.html" % c.id, "w")
-		fp.write("<html>\n</head>\n")
-		fp.write("<title>%s</title>\n" % c.id)
-		fp.write("</head>\n\n<body>\n")
+    for c in cacheList:
+        fp = file("%s.html" % c.id, "w")
+        fp.write("<html>\n</head>\n")
+        fp.write("<title>%s</title>\n" % c.id)
+        fp.write("</head>\n\n<body>\n")
 
-		fp.write("<b>%s</b>\n" % c.name.encode("ascii", "replace"))
-		fp.write("<br>Lat: %.5f, Lon: %.5f\n" % (float(c.lat), float(c.lon)))
-		fp.write("<br>Lat: %s, Lon: %s\n" % (ll2hm(c.lat, True), ll2hm(c.lon, False)))
-		fp.write("<p>Type: %s\n" % c.type)
-		fp.write("<br>Container: %s\n" % c.container)
-		fp.write("<br>Difficulty: %s/5\n" % c.difficulty)
-		fp.write("<br>Terrain: %s/5\n" % c.terrain)
-		fp.write("<br>Owner: %s\n" % c.owner.encode('ascii', 'replace'))
-		fp.write("<br>ID: <a href=\"%s\">%s</a>\n" % (c.url, c.id))
+        fp.write("<b>%s</b>\n" % c.name.encode("ascii", "replace"))
+        fp.write("<br>Lat: %.5f, Lon: %.5f\n" % (float(c.lat), float(c.lon)))
+        fp.write("<br>Lat: %s, Lon: %s\n" % (ll2hm(c.lat, True), ll2hm(c.lon, False)))
+        fp.write("<p>Type: %s\n" % c.type)
+        fp.write("<br>Container: %s\n" % c.container)
+        fp.write("<br>Difficulty: %s/5\n" % c.difficulty)
+        fp.write("<br>Terrain: %s/5\n" % c.terrain)
+        fp.write("<br>Owner: %s\n" % c.owner.encode('ascii', 'replace'))
+        fp.write("<br>ID: <a href=\"%s\">%s</a>\n" % (c.url, c.id))
 
-		if not c.available:
-			fp.write("<p><b>WARNING!</b>  Cache marked as Unavailable!\n")
-		if c.archived:
-			fp.write("<p><b>WARNING!</b>  Cache marked as Archived!\n")
+        if not c.available:
+            fp.write("<p><b>WARNING!</b>  Cache marked as Unavailable!\n")
+        if c.archived:
+            fp.write("<p><b>WARNING!</b>  Cache marked as Archived!\n")
 
-		if c.travelbugs != []:
-			fp.write("<p><b>Travelbugs</b>:\n<p>")
-			fp.write("<ul>\n")
-			for b in c.travelbugs:
-				fp.write("<li>%s</li>\n" % b.encode('ascii', 'replace'))
-			fp.write("</ul>\n")
+        if c.travelbugs != []:
+            fp.write("<p><b>Travelbugs</b>:\n<p>")
+            fp.write("<ul>\n")
+            for b in c.travelbugs:
+                fp.write("<li>%s</li>\n" % b.encode('ascii', 'replace'))
+            fp.write("</ul>\n")
 
-		fp.write("<p><b>Description</b>:\n")
-		fp.write("<p>%s\n<p>%s\n" % (c.shortdesc.encode('ascii', 'replace'), c.longdesc.encode('ascii', 'replace')))
+        fp.write("<p><b>Description</b>:\n")
+        fp.write("<p>%s\n<p>%s\n" % (c.shortdesc.encode('ascii', 'replace'), c.longdesc.encode('ascii', 'replace')))
 
-		fp.write("<p><b>Hints</b>:\n")
-		if c.hints == "":
-			fp.write("<p>None :-(<br>\n")
-		else:
-			c.hints = re.sub("\n", "\n<br>", c.hints)
-			fp.write("<p>%s\n" % c.hints.encode("ascii", "replace"))
+        fp.write("<p><b>Hints</b>:\n")
+        if c.hints == "":
+            fp.write("<p>None :-(<br>\n")
+        else:
+            c.hints = re.sub("\n", "\n<br>", c.hints)
+            fp.write("<p>%s\n" % c.hints.encode("ascii", "replace"))
 
-		fp.write("<p><b>Last Logs</b>:\n<p>")
-		if c.logs == []:
-			fp.write("None!<br>\n")
-		else:
-			count = 0
-			for l in c.logs:
-				fp.write("%s<br>\n" % l)
-				count = count + 1
-				if count > 5: break
+        fp.write("<p><b>Last Logs</b>:\n<p>")
+        if c.logs == []:
+            fp.write("None!<br>\n")
+        else:
+            count = 0
+            for l in c.logs:
+                fp.write("%s<br>\n" % l)
+                count = count + 1
+                if count > 5: break
 
-		fp.write("<hr>\n</body>\n</html>\n")
+        fp.write("<hr>\n</body>\n</html>\n")
 
-		fp.close()
+        fp.close()
 
 def writeIndexFiles(ai, cacheList):
-	fp = file(ai.indexfilename, "w")
-	fp.write("<html>\n</head>\n")
-	fp.write("<title>%s</title>\n" % ai.indextitle)
-	fp.write("</head>\n\n<body>\n")
+    fp = file(ai.indexfilename, "w")
+    fp.write("<html>\n</head>\n")
+    fp.write("<title>%s</title>\n" % ai.indextitle)
+    fp.write("</head>\n\n<body>\n")
 
-	fp.write("<h2>%s</h2>\n" % ai.indextitle)
-	fp.write("<ul>\n")
+    fp.write("<h2>%s</h2>\n" % ai.indextitle)
+    fp.write("<ul>\n")
 
-	idList = [c.id for c in cacheList]
-	idList.sort()
-	for id in idList:
-		fp.write("<li><a href=\"%s.html\">%s</a></li>\n" % (id, id))
+    idList = [c.id for c in cacheList]
+    idList.sort()
+    for id in idList:
+        fp.write("<li><a href=\"%s.html\">%s</a></li>\n" % (id, id))
 
-	fp.write("</ul>\n<hr>\n</body>\n</html>\n")
-	fp.close()
+    fp.write("</ul>\n<hr>\n</body>\n</html>\n")
+    fp.close()
 
 def main(argv):
-	ai = parseCommandLine(argv)
+    ai = parseCommandLine(argv)
 
-	sys.stderr.write("reading XML...\n")
-	ai.dom = xml.dom.minidom.parse(ai.infilename)
+    sys.stderr.write("reading XML...\n")
+    ai.dom = xml.dom.minidom.parse(ai.infilename)
 
-	sys.stderr.write("building cache list...\n")
-	cacheList = buildCacheList(ai.dom)
+    sys.stderr.write("building cache list...\n")
+    cacheList = buildCacheList(ai.dom)
 
-	sys.stderr.write("writing cache files...\n")
-	if not os.path.exists(ai.outdirname):
-		os.makedirs(ai.outdirname)
+    sys.stderr.write("writing cache files...\n")
+    if not os.path.exists(ai.outdirname):
+        os.makedirs(ai.outdirname)
 
-	os.chdir(ai.outdirname)
-	writeFiles(cacheList)
+    os.chdir(ai.outdirname)
+    writeFiles(cacheList)
 
-	if ai.indexfilename != None:
-		sys.stderr.write("writing index file...\n")
-		writeIndexFiles(ai, cacheList)
+    if ai.indexfilename != None:
+        sys.stderr.write("writing index file...\n")
+        writeIndexFiles(ai, cacheList)
 
-	return 0
+    return 0
 
 if __name__ == "__main__": sys.exit(main(sys.argv))
 

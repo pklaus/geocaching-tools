@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # osmoo v0.1 (27-nov-2007)
 #
@@ -78,224 +78,224 @@ import base64
 
 #-------------------------------------------------------------------------
 class AppContext(object):
-	apiurl  = 'http://api.openstreetmap.org/api/0.5/'
-	xapiurl = 'http://www.informationfreeway.org/api/0.5/'
+    apiurl  = 'http://api.openstreetmap.org/api/0.5/'
+    xapiurl = 'http://www.informationfreeway.org/api/0.5/'
 
-	osmrealm = ''
-	osmhost = apiurl
+    osmrealm = ''
+    osmhost = apiurl
 
-	MODE_GET = 1
-	MODE_PUT = 2
-	MODE_CREATE = 3
-	MODE_UPDATE = 4
-	MODE_DELETE = 5
+    MODE_GET = 1
+    MODE_PUT = 2
+    MODE_CREATE = 3
+    MODE_UPDATE = 4
+    MODE_DELETE = 5
 
-	OPERAND_NONE = 0
-	OPERAND_NODE = 1
-	OPERAND_WAY = 2
-	OPERAND_RELATION = 4
+    OPERAND_NONE = 0
+    OPERAND_NODE = 1
+    OPERAND_WAY = 2
+    OPERAND_RELATION = 4
 
-	MODIFIER_FULL = 1
-	MODIFIER_RELATION = 2
-	MODIFIER_HISTORY = 3
-	MODIFIER_WAYS = 4
+    MODIFIER_FULL = 1
+    MODIFIER_RELATION = 2
+    MODIFIER_HISTORY = 3
+    MODIFIER_WAYS = 4
 
-	def __init__(self, argv):
-		self.scriptname = os.path.basename(argv[0])
+    def __init__(self, argv):
+        self.scriptname = os.path.basename(argv[0])
 
-		self.nidlist = None
-		self.widlist = None
-		self.mode = None
-		self.bbox = None
-		self.usexapi = False
-		self.xquery = None
-		self.username = None
-		self.password = None
-		self.operand = self.OPERAND_NONE
-		self.modifier = None
-		self.outfilename = '-'
-		self.debuglevel = 0
-		self.quiet = False
-		self.osmfilename = None
+        self.nidlist = None
+        self.widlist = None
+        self.mode = None
+        self.bbox = None
+        self.usexapi = False
+        self.xquery = None
+        self.username = None
+        self.password = None
+        self.operand = self.OPERAND_NONE
+        self.modifier = None
+        self.outfilename = '-'
+        self.debuglevel = 0
+        self.quiet = False
+        self.osmfilename = None
 
-		self.envusername = '%s_USERNAME' % self.scriptname.upper()
-		self.envpassword = '%s_PASSWORD' % self.scriptname.upper()
+        self.envusername = '%s_USERNAME' % self.scriptname.upper()
+        self.envpassword = '%s_PASSWORD' % self.scriptname.upper()
 
-		try:
-			opts, args = getopt.gnu_getopt(argv[1:], 'hi:gpcudxq:nwro:', \
-					['help', 'id=', 'get', 'put', 'create', 'update', \
-					'delete', 'username=', 'password=', 'xapi', \
-					'xquery=', 'full', 'relations', 'history', \
-					'ways', 'nid=', 'wid=', 'outfile=', 'bbox=', \
-					'debug=', 'quiet'])
-		except getopt.GetoptError:
-			self.usageExit()
+        try:
+            opts, args = getopt.gnu_getopt(argv[1:], 'hi:gpcudxq:nwro:', \
+                    ['help', 'id=', 'get', 'put', 'create', 'update', \
+                    'delete', 'username=', 'password=', 'xapi', \
+                    'xquery=', 'full', 'relations', 'history', \
+                    'ways', 'nid=', 'wid=', 'outfile=', 'bbox=', \
+                    'debug=', 'quiet'])
+        except getopt.GetoptError:
+            self.usageExit()
 
-		commandErrStr = "specify only one of -g, -d, -p, -c, or -u"
+        commandErrStr = "specify only one of -g, -d, -p, -c, or -u"
 
-		for o,a in opts:
-			if o in ('-h', '--help'):
-				self.usageExit()
+        for o,a in opts:
+            if o in ('-h', '--help'):
+                self.usageExit()
 
-			if o == '--debug':
-				try:
-					self.debuglevel = int(a)
-				except:
-					self.usageExit("debuglevel must be integer")
-		
-			elif o  == '--quiet':
-				self.quiet = True
+            if o == '--debug':
+                try:
+                    self.debuglevel = int(a)
+                except:
+                    self.usageExit("debuglevel must be integer")
+        
+            elif o  == '--quiet':
+                self.quiet = True
 
-			elif o in ('-g', '--get'):
-				if self.mode != None and self.mode != ac.MODE_GET:
-					self.usageExit(commandErrStr)
-				self.mode = self.MODE_GET
+            elif o in ('-g', '--get'):
+                if self.mode != None and self.mode != ac.MODE_GET:
+                    self.usageExit(commandErrStr)
+                self.mode = self.MODE_GET
 
-			elif o in ('-p', '--put'):
-				if self.mode != None and self.mode != ac.MODE_PUT:
-					self.usageExit(commandErrStr)
-				self.mode = self.MODE_PUT
+            elif o in ('-p', '--put'):
+                if self.mode != None and self.mode != ac.MODE_PUT:
+                    self.usageExit(commandErrStr)
+                self.mode = self.MODE_PUT
 
-			elif o in ('-c', '--create'):
-				if self.mode != None and self.mode != ac.MODE_CREATE:
-					self.usageExit(commandErrStr)
-				self.mode = self.MODE_CREATE
+            elif o in ('-c', '--create'):
+                if self.mode != None and self.mode != ac.MODE_CREATE:
+                    self.usageExit(commandErrStr)
+                self.mode = self.MODE_CREATE
 
-			elif o in ('-u', '--update'):
-				if self.mode != None and self.mode != ac.MODE_UPDATE:
-					self.usageExit(commandErrStr)
-				self.mode = self.MODE_UPDATE
+            elif o in ('-u', '--update'):
+                if self.mode != None and self.mode != ac.MODE_UPDATE:
+                    self.usageExit(commandErrStr)
+                self.mode = self.MODE_UPDATE
 
-			elif o in ('-d', '--delete'):
-				if self.mode != None and self.mode != ac.MODE_DELETE:
-					self.usageExit(commandErrStr)
-				self.mode = self.MODE_DELETE
+            elif o in ('-d', '--delete'):
+                if self.mode != None and self.mode != ac.MODE_DELETE:
+                    self.usageExit(commandErrStr)
+                self.mode = self.MODE_DELETE
 
-			elif o in ('-o', '--outfile'):
-				self.outfilename = a
+            elif o in ('-o', '--outfile'):
+                self.outfilename = a
 
-			elif o == '--username':
-				self.username = a
+            elif o == '--username':
+                self.username = a
 
-			elif o == '--password':
-				self.password = a
+            elif o == '--password':
+                self.password = a
 
-			elif o == '--bbox':
-				self.bbox = a.split(',')
-				if len(self.bbox) != 4:
-					self.usageExit('bounding box requires lon1,lat1,lon2,lat2')
+            elif o == '--bbox':
+                self.bbox = a.split(',')
+                if len(self.bbox) != 4:
+                    self.usageExit('bounding box requires lon1,lat1,lon2,lat2')
 
-				self.bbox[0] = float(self.bbox[0])
-				self.bbox[1] = float(self.bbox[1])
-				self.bbox[2] = float(self.bbox[2])
-				self.bbox[3] = float(self.bbox[3])
+                self.bbox[0] = float(self.bbox[0])
+                self.bbox[1] = float(self.bbox[1])
+                self.bbox[2] = float(self.bbox[2])
+                self.bbox[3] = float(self.bbox[3])
 
-				# correct order, lower left to upper right:
-				if self.bbox[0] > self.bbox[2]:
-					temp = self.bbox[0]
-					self.bbox[0] = self.bbox[2]
-					self.bbox[2] = temp
-				if self.bbox[1] > self.bbox[3]:
-					temp = self.bbox[1]
-					self.bbox[1] = self.bbox[3]
-					self.bbox[3] = temp
+                # correct order, lower left to upper right:
+                if self.bbox[0] > self.bbox[2]:
+                    temp = self.bbox[0]
+                    self.bbox[0] = self.bbox[2]
+                    self.bbox[2] = temp
+                if self.bbox[1] > self.bbox[3]:
+                    temp = self.bbox[1]
+                    self.bbox[1] = self.bbox[3]
+                    self.bbox[3] = temp
 
-				self.bboxstr = "%f,%f,%f,%f" % (self.bbox[0],
-						self.bbox[1], self.bbox[2], self.bbox[3])
+                self.bboxstr = "%f,%f,%f,%f" % (self.bbox[0],
+                        self.bbox[1], self.bbox[2], self.bbox[3])
 
-			elif o == '--nid':
-				self.nidlist = a.split(',')
-				self.operand = self.OPERAND_NODE
+            elif o == '--nid':
+                self.nidlist = a.split(',')
+                self.operand = self.OPERAND_NODE
 
-			elif o == '--wid':
-				self.widlist = a.split(',')
-				self.operand = self.OPERAND_WAY
+            elif o == '--wid':
+                self.widlist = a.split(',')
+                self.operand = self.OPERAND_WAY
 
-			elif o == '--rid':
-				self.ridlist = a.split(',')
-				self.operand = self.OPERAND_RELATION
+            elif o == '--rid':
+                self.ridlist = a.split(',')
+                self.operand = self.OPERAND_RELATION
 
-			elif o in ('-x', '--xapi'):
-				self.usexapi = True
+            elif o in ('-x', '--xapi'):
+                self.usexapi = True
 
-			elif o in ('-q', '--xquery'):
-				self.xquery = a
-				self.usexapi = True
+            elif o in ('-q', '--xquery'):
+                self.xquery = a
+                self.usexapi = True
 
-			elif o == '-n':
-				self.operand = self.OPERAND_NODE
+            elif o == '-n':
+                self.operand = self.OPERAND_NODE
 
-			elif o == '-w':
-				self.operand = self.OPERAND_WAY
+            elif o == '-w':
+                self.operand = self.OPERAND_WAY
 
-			elif o == '-r':
-				self.operand = self.OPERAND_RELATION
+            elif o == '-r':
+                self.operand = self.OPERAND_RELATION
 
-			elif o == '--full':
-				self.modifier = self.MODIFIER_FULL
+            elif o == '--full':
+                self.modifier = self.MODIFIER_FULL
 
-			elif o == '--relation':
-				self.modifier = self.MODIFIER_RELATION
+            elif o == '--relation':
+                self.modifier = self.MODIFIER_RELATION
 
-			elif o == '--history':
-				self.modifier = self.MODIFIER_HISTORY
+            elif o == '--history':
+                self.modifier = self.MODIFIER_HISTORY
 
-			elif o == '--ways':
-				self.modifier = self.MODIFIER_WAYS
+            elif o == '--ways':
+                self.modifier = self.MODIFIER_WAYS
 
-		# get osmfilename
-		if len(args) == 1:
-			self.osmfilename = args[0]
-		elif len(args) != 0:
-			self.usageExit()
+        # get osmfilename
+        if len(args) == 1:
+            self.osmfilename = args[0]
+        elif len(args) != 0:
+            self.usageExit()
 
-		# only MODE_GET allowed with xapi
-		if self.usexapi:
-			if self.mode != None:
-				if self.mode != self.MODE_GET:
-					self.usageExit("XAPI can only be used with -g")
-			else:
-				self.mode = self.MODE_GET
+        # only MODE_GET allowed with xapi
+        if self.usexapi:
+            if self.mode != None:
+                if self.mode != self.MODE_GET:
+                    self.usageExit("XAPI can only be used with -g")
+            else:
+                self.mode = self.MODE_GET
 
-		if self.mode == None:
-			self.usageExit()
+        if self.mode == None:
+            self.usageExit()
 
-		# check for bad combinations of options
-		if self.modifier == self.MODIFIER_FULL and \
-				(self.operand != self.OPERAND_WAY and \
-				self.operand != self.OPERAND_RELATION):
-			self.usageExit("full modifier can only be used with ways or relations")
+        # check for bad combinations of options
+        if self.modifier == self.MODIFIER_FULL and \
+                (self.operand != self.OPERAND_WAY and \
+                self.operand != self.OPERAND_RELATION):
+            self.usageExit("full modifier can only be used with ways or relations")
 
-		if self.modifier == self.MODIFIER_WAYS and \
-				self.operand != self.OPERAND_NODE:
-			self.usageExit("ways modifier can only be used with nodes")
+        if self.modifier == self.MODIFIER_WAYS and \
+                self.operand != self.OPERAND_NODE:
+            self.usageExit("ways modifier can only be used with nodes")
 
-		if self.usexapi and \
-				(self.operand != self.OPERAND_NODE and \
-				self.operand != self.OPERAND_WAY):
-			self.usageExit("must specify nodes or ways with xapi")
+        if self.usexapi and \
+                (self.operand != self.OPERAND_NODE and \
+                self.operand != self.OPERAND_WAY):
+            self.usageExit("must specify nodes or ways with xapi")
 
-		if self.usexapi and self.xquery == None:
-			self.usageExit("must specify xquery with xapi")
+        if self.usexapi and self.xquery == None:
+            self.usageExit("must specify xquery with xapi")
 
-		if (self.mode == self.MODE_PUT or \
-				self.mode == self.MODE_CREATE or \
-				self.mode == self.MODE_UPDATE) and \
-				self.osmfilename == None:
-			self.usageExit("file required for put, update, or create")
+        if (self.mode == self.MODE_PUT or \
+                self.mode == self.MODE_CREATE or \
+                self.mode == self.MODE_UPDATE) and \
+                self.osmfilename == None:
+            self.usageExit("file required for put, update, or create")
 
-		# look for username and password in the environment
-		if self.needsWritePriv():
-			if os.environ.has_key(self.envusername):
-				self.username = os.environ[self.envusername]
-			if os.environ.has_key(self.envpassword):
-				self.password = os.environ[self.envpassword]
+        # look for username and password in the environment
+        if self.needsWritePriv():
+            if os.environ.has_key(self.envusername):
+                self.username = os.environ[self.envusername]
+            if os.environ.has_key(self.envpassword):
+                self.password = os.environ[self.envpassword]
 
-	def usageExit(self, str=None, status=1):
-		if str != None:
-			sys.stderr.write('%s: %s\n' % (self.scriptname, str))
-		else:
-			sys.stderr.write( \
+    def usageExit(self, str=None, status=1):
+        if str != None:
+            sys.stderr.write('%s: %s\n' % (self.scriptname, str))
+        else:
+            sys.stderr.write( \
 """usage: %s command [options] [osmfile]
 
   Commands:
@@ -330,364 +330,364 @@ class AppContext(object):
    -q  --xquery=query           specify xapi query string (no [])
    -h  --help                   usage help
        --debug=level            set debug level (higher=more)
-	   --quiet					suppress normal output
+       --quiet                    suppress normal output
 
   If needed and not specified, username and password will be prompted
   for.  They can also be set in the following environment variables:
-	  
+      
   %s, %s
 
 """ % (self.scriptname, self.envusername, self.envpassword))
-		sys.exit(status)
+        sys.exit(status)
 
-	def warn(self, msg):
-		sys.stderr.write('%s: %s\n' % (self.scriptname, msg))
+    def warn(self, msg):
+        sys.stderr.write('%s: %s\n' % (self.scriptname, msg))
 
-	def debug(self, msg, level=1):
-		if level <= self.debuglevel:
-			sys.stderr.write('%s: DEBUG: %s\n' % (self.scriptname, msg))
+    def debug(self, msg, level=1):
+        if level <= self.debuglevel:
+            sys.stderr.write('%s: DEBUG: %s\n' % (self.scriptname, msg))
 
-	def info(self, msg, pretext='', nolead=False):
-		if not self.quiet:
-			if nolead:
-				sys.stderr.write(msg)
-			else:
-				sys.stderr.write('%s%s: %s' % (pretext, self.scriptname, msg))
-			sys.stderr.flush()
+    def info(self, msg, pretext='', nolead=False):
+        if not self.quiet:
+            if nolead:
+                sys.stderr.write(msg)
+            else:
+                sys.stderr.write('%s%s: %s' % (pretext, self.scriptname, msg))
+            sys.stderr.flush()
 
-	def needsWritePriv(self):
-		return self.mode == self.MODE_PUT or \
-			self.mode == self.MODE_CREATE or \
-			self.mode == self.MODE_UPDATE or \
-			self.mode == self.MODE_DELETE
+    def needsWritePriv(self):
+        return self.mode == self.MODE_PUT or \
+            self.mode == self.MODE_CREATE or \
+            self.mode == self.MODE_UPDATE or \
+            self.mode == self.MODE_DELETE
 
 #-------------------------------------------------------------------------
 # wrapper class to allow changing the HTTP request method (need PUT, DELETE)
 #
 class osmooRequest(urllib2.Request):
-	def __init__(self, url, data=None, headers={}, origin_req_host=None, \
-				unverifiable=False, method=None):
+    def __init__(self, url, data=None, headers={}, origin_req_host=None, \
+                unverifiable=False, method=None):
 
-		urllib2.Request.__init__(self, url=url, data=data, headers=headers, \
-				origin_req_host=origin_req_host, unverifiable=unverifiable)
+        urllib2.Request.__init__(self, url=url, data=data, headers=headers, \
+                origin_req_host=origin_req_host, unverifiable=unverifiable)
 
-		self.method = method
+        self.method = method
 
-		if self.method == None:
-			self.method = urllib2.Request.get_method(self)
+        if self.method == None:
+            self.method = urllib2.Request.get_method(self)
 
-	def get_method(self):
-		return self.method
+    def get_method(self):
+        return self.method
 
-	def set_method(self, method):
-		self.method = method
+    def set_method(self, method):
+        self.method = method
 
 #-------------------------------------------------------------------------
 def managePassword(ac):
-	# get username if not specified
-	if ac.needsWritePriv():
-		if ac.username == None:
-			sys.stdout.write('Username: ')
-			sys.stdout.flush()
-			ac.username = sys.stdin.readline().strip()
+    # get username if not specified
+    if ac.needsWritePriv():
+        if ac.username == None:
+            sys.stdout.write('Username: ')
+            sys.stdout.flush()
+            ac.username = sys.stdin.readline().strip()
 
-		if ac.password == None:
-			ac.password = getpass.getpass()
+        if ac.password == None:
+            ac.password = getpass.getpass()
 
 #-------------------------------------------------------------------------
 def putOrDeleteURL(ac, mode, url, n):
-	authstr = base64.b64encode(':'.join((ac.username, ac.password))).strip()
+    authstr = base64.b64encode(':'.join((ac.username, ac.password))).strip()
 
-	if n != None:
-		data = '<osm version="0.5" generator="osmoo">%s</osm>' % n.toxml()
-	else:
-		data = ''
+    if n != None:
+        data = '<osm version="0.5" generator="osmoo">%s</osm>' % n.toxml()
+    else:
+        data = ''
 
-	headers = {'Authorization': 'Basic ' + authstr}
+    headers = {'Authorization': 'Basic ' + authstr}
 
-	ac.debug("url: " + url)
-	ac.debug("auth: " + authstr)
-	ac.debug("data: " + data)
+    ac.debug("url: " + url)
+    ac.debug("auth: " + authstr)
+    ac.debug("data: " + data)
 
-	data = data.encode('utf-8')
+    data = data.encode('utf-8')
 
-	req = osmooRequest(url=url, method=mode, headers=headers, data=data)
+    req = osmooRequest(url=url, method=mode, headers=headers, data=data)
 
-	#ac.info('connecting...\n')
+    #ac.info('connecting...\n')
 
-	con = urllib2.urlopen(req)
+    con = urllib2.urlopen(req)
 
-	#ac.info('transferring...\n')
+    #ac.info('transferring...\n')
 
-	result = con.read()
+    result = con.read()
 
-	con.close()
+    con.close()
 
-	#ac.info('connection closed\n')
+    #ac.info('connection closed\n')
 
-	ac.debug("result: " + result)
-	return result
+    ac.debug("result: " + result)
+    return result
 
 #-------------------------------------------------------------------------
 def getURL(ac, url):
-	ac.debug("url: " + url)
+    ac.debug("url: " + url)
 
-	if ac.outfilename == '-':
-		fout = sys.stdout
-	else:
-		fout = file(ac.outfilename, "w")
+    if ac.outfilename == '-':
+        fout = sys.stdout
+    else:
+        fout = file(ac.outfilename, "w")
 
-	ac.info('connecting...\n')
+    ac.info('connecting...\n')
 
-	con = urllib2.urlopen(url)
-	data = con.read(4096)
-	total = len(data)
-	while data != '':
-		#ac.debug('recv %d bytes' % len(data), 5)
-		ac.info('recieved %d bytes' % total, pretext='\r')
+    con = urllib2.urlopen(url)
+    data = con.read(4096)
+    total = len(data)
+    while data != '':
+        #ac.debug('recv %d bytes' % len(data), 5)
+        ac.info('recieved %d bytes' % total, pretext='\r')
 
-		fout.write(data)
-		data = con.read(4096)
-		total += len(data)
+        fout.write(data)
+        data = con.read(4096)
+        total += len(data)
 
-	con.close()
+    con.close()
 
-	if fout != sys.stdout:
-		fout.close()
+    if fout != sys.stdout:
+        fout.close()
 
-	ac.info('connection closed\n', pretext='\n')
+    ac.info('connection closed\n', pretext='\n')
 
 #-------------------------------------------------------------------------
 def get_xapi(ac):
-	assert(ac.operand == ac.OPERAND_NODE or ac.operand == ac.OPERAND_WAY)
-	assert(ac.xquery != None)
+    assert(ac.operand == ac.OPERAND_NODE or ac.operand == ac.OPERAND_WAY)
+    assert(ac.xquery != None)
 
-	if ac.bbox != None:
-		bboxstr = '[bbox=%s]' % ac.bboxstr
-	else:
-		bboxstr = ''
+    if ac.bbox != None:
+        bboxstr = '[bbox=%s]' % ac.bboxstr
+    else:
+        bboxstr = ''
 
-	querystr = '[%s]' % ac.xquery
+    querystr = '[%s]' % ac.xquery
 
-	if ac.operand == ac.OPERAND_NODE:
-		opstr = 'node'
-	elif ac.operand == ac.OPERAND_WAY:
-		opstr = 'way'
+    if ac.operand == ac.OPERAND_NODE:
+        opstr = 'node'
+    elif ac.operand == ac.OPERAND_WAY:
+        opstr = 'way'
 
-	url = "".join((ac.xapiurl, opstr, querystr, bboxstr))
+    url = "".join((ac.xapiurl, opstr, querystr, bboxstr))
 
-	getURL(ac, url)
+    getURL(ac, url)
 
 #-------------------------------------------------------------------------
 def get(ac):
-	qtypestr = None
-	url = None
+    qtypestr = None
+    url = None
 
-	# see if we're just getting for a bbox:
-	if ac.bbox != None:
-		url = "%smap?bbox=%s" % (ac.apiurl, ac.bboxstr)
+    # see if we're just getting for a bbox:
+    if ac.bbox != None:
+        url = "%smap?bbox=%s" % (ac.apiurl, ac.bboxstr)
 
-	else: # see if the user wants a list of nodes
-		if ac.widlist != None:
-			idlist = ac.widlist
-			qtypestr = "way"
-		elif ac.nidlist != None:
-			idlist = ac.nidlist
-			qtypestr = "node"
-		elif ac.ridlist != None:
-			idlist = ac.ridlist
-			qtypestr = "relation"
+    else: # see if the user wants a list of nodes
+        if ac.widlist != None:
+            idlist = ac.widlist
+            qtypestr = "way"
+        elif ac.nidlist != None:
+            idlist = ac.nidlist
+            qtypestr = "node"
+        elif ac.ridlist != None:
+            idlist = ac.ridlist
+            qtypestr = "relation"
 
-		if len(idlist) > 1:  # multiple ids
-			if ac.modifier != None:
-				ac.warn("ignoring modifier with multiple ids")
-				
-			url = "%s%ss?%ss=%s" % (ac.apiurl, qtypestr, qtypestr, \
-					','.join(idlist))
-			modstr = ''
+        if len(idlist) > 1:  # multiple ids
+            if ac.modifier != None:
+                ac.warn("ignoring modifier with multiple ids")
+                
+            url = "%s%ss?%ss=%s" % (ac.apiurl, qtypestr, qtypestr, \
+                    ','.join(idlist))
+            modstr = ''
 
-		else: # single id
-			modstr = ''
+        else: # single id
+            modstr = ''
 
-			if ac.modifier == ac.MODIFIER_HISTORY:
-				modstr = '/history'
-			elif ac.modifier == ac.MODIFIER_RELATION:
-				modstr = '/relations'
-			elif ac.modifier == ac.MODIFIER_FULL:
-				modstr = '/full'
+            if ac.modifier == ac.MODIFIER_HISTORY:
+                modstr = '/history'
+            elif ac.modifier == ac.MODIFIER_RELATION:
+                modstr = '/relations'
+            elif ac.modifier == ac.MODIFIER_FULL:
+                modstr = '/full'
 
-			url = "".join((ac.apiurl, qtypestr, '/', idlist[0], modstr))
+            url = "".join((ac.apiurl, qtypestr, '/', idlist[0], modstr))
 
-	getURL(ac, url)
+    getURL(ac, url)
 
 #-------------------------------------------------------------------------
 def getSymbolicId(id):
-	if id == '': # no id, so we'll never match it, but make up a symb name
-		return "45e0f7ea3310091e9b6f04298b81d33b"  # unique random string
+    if id == '': # no id, so we'll never match it, but make up a symb name
+        return "45e0f7ea3310091e9b6f04298b81d33b"  # unique random string
 
-	try:
-		idint = int(id)
-		if idint < 0:
-			return id  # id is negative, that's the symbolic version
-	except:
-		return id  # id is not a number, that's the symbolic version
+    try:
+        idint = int(id)
+        if idint < 0:
+            return id  # id is negative, that's the symbolic version
+    except:
+        return id  # id is not a number, that's the symbolic version
 
-	return None  # id is a valid number, no symbolic version
+    return None  # id is a valid number, no symbolic version
 
 #-------------------------------------------------------------------------
 def put(ac):
-	newNodeMap = {}
+    newNodeMap = {}
 
-	dom = xml.dom.minidom.parse(ac.osmfilename)
-	doc = dom.documentElement
-	
-	doc.setAttribute('generator', ac.scriptname)
+    dom = xml.dom.minidom.parse(ac.osmfilename)
+    doc = dom.documentElement
+    
+    doc.setAttribute('generator', ac.scriptname)
 
-	# transfer nodes
-	nodelist = doc.getElementsByTagName('node')
+    # transfer nodes
+    nodelist = doc.getElementsByTagName('node')
 
-	for n in nodelist:
-		id = n.getAttribute('id')
-		symbolicId = getSymbolicId(id)
+    for n in nodelist:
+        id = n.getAttribute('id')
+        symbolicId = getSymbolicId(id)
 
-		if symbolicId != None:  # need to map to new node
-			n.removeAttribute('id')
-			mode = 'create'
-			printableId = symbolicId
-		else:
-			mode = id
-			printableId = id
+        if symbolicId != None:  # need to map to new node
+            n.removeAttribute('id')
+            mode = 'create'
+            printableId = symbolicId
+        else:
+            mode = id
+            printableId = id
 
-		url = "".join((ac.apiurl, 'node/', mode))
+        url = "".join((ac.apiurl, 'node/', mode))
 
-		ac.info('transferring node [id=%s]' % printableId)
-		result = putOrDeleteURL(ac, "PUT", url, n).strip()
-		if symbolicId != None:
-			ac.info(' (new id=%s)\n' % result, nolead=True)
-			# track new node IDs so we can reference them later for ways
-			newNodeMap[symbolicId] = result
-			n.setAttribute('id', result)  # modify XML to reflect
-		else:
-			ac.info('\n')
+        ac.info('transferring node [id=%s]' % printableId)
+        result = putOrDeleteURL(ac, "PUT", url, n).strip()
+        if symbolicId != None:
+            ac.info(' (new id=%s)\n' % result, nolead=True)
+            # track new node IDs so we can reference them later for ways
+            newNodeMap[symbolicId] = result
+            n.setAttribute('id', result)  # modify XML to reflect
+        else:
+            ac.info('\n')
 
-		ac.debug(str(newNodeMap))
+        ac.debug(str(newNodeMap))
 
-	# transfer ways
-	waylist = doc.getElementsByTagName('way')
+    # transfer ways
+    waylist = doc.getElementsByTagName('way')
 
-	for w in waylist:
-		bail = False
-		id = w.getAttribute('id')
-		symbolicId = getSymbolicId(id)
+    for w in waylist:
+        bail = False
+        id = w.getAttribute('id')
+        symbolicId = getSymbolicId(id)
 
-		ndlist = w.getElementsByTagName('nd')
-		for nd in ndlist:
-			refid = nd.getAttribute('ref')
-			if not newNodeMap.has_key(refid):
-				ac.warn("ignoring way that references nonexistant symbolic node %s" % refid)
-				bail = True
-				break
+        ndlist = w.getElementsByTagName('nd')
+        for nd in ndlist:
+            refid = nd.getAttribute('ref')
+            if not newNodeMap.has_key(refid):
+                ac.warn("ignoring way that references nonexistant symbolic node %s" % refid)
+                bail = True
+                break
 
-			refid = newNodeMap[refid]
-			nd.setAttribute('ref', refid)  # modify XML to reflect
+            refid = newNodeMap[refid]
+            nd.setAttribute('ref', refid)  # modify XML to reflect
 
-		if bail: break
+        if bail: break
 
-		if symbolicId != None:  # need to map to new node
-			w.removeAttribute('id')
-			mode = 'create'
-			printableId = symbolicId
-		else:
-			mode = id
-			printableId = id
+        if symbolicId != None:  # need to map to new node
+            w.removeAttribute('id')
+            mode = 'create'
+            printableId = symbolicId
+        else:
+            mode = id
+            printableId = id
 
-		url = "".join((ac.apiurl, 'way/', mode))
+        url = "".join((ac.apiurl, 'way/', mode))
 
-		ac.info('transferring way [id=%s]' % printableId)
-		result = putOrDeleteURL(ac, "PUT", url, w).strip()
+        ac.info('transferring way [id=%s]' % printableId)
+        result = putOrDeleteURL(ac, "PUT", url, w).strip()
 
-		if symbolicId != None:
-			ac.info(' (new id=%s)\n' % result, nolead=True)
-			# track new node IDs so we can reference them later for ways
-			newNodeMap[symbolicId] = result
-			w.setAttribute('id', result)  # modify XML to reflect
-		else:
-			ac.info('\n')
+        if symbolicId != None:
+            ac.info(' (new id=%s)\n' % result, nolead=True)
+            # track new node IDs so we can reference them later for ways
+            newNodeMap[symbolicId] = result
+            w.setAttribute('id', result)  # modify XML to reflect
+        else:
+            ac.info('\n')
 
-	if ac.outfilename == '-': fp = sys.stdout
-	else: fp = file(ac.outfilename, "w")
+    if ac.outfilename == '-': fp = sys.stdout
+    else: fp = file(ac.outfilename, "w")
 
-	fp.write(doc.toprettyxml().encode('utf-8'))
+    fp.write(doc.toprettyxml().encode('utf-8'))
 
-	if fp != sys.stdout: fp.close()
+    if fp != sys.stdout: fp.close()
 
 #-------------------------------------------------------------------------
 def delete(ac):
-	if ac.osmfilename != None:
-		dom = xml.dom.minidom.parse(ac.osmfilename)
-		doc = dom.documentElement
+    if ac.osmfilename != None:
+        dom = xml.dom.minidom.parse(ac.osmfilename)
+        doc = dom.documentElement
 
-	else:
-		dom = None
-	
-	# delete ways first, in case some nodes reference them
-	if dom != None:
-		waylist = doc.getElementsByTagName('way')
-	else:
-		waylist = ac.widlist
-		if waylist == None:
-			waylist = []
+    else:
+        dom = None
+    
+    # delete ways first, in case some nodes reference them
+    if dom != None:
+        waylist = doc.getElementsByTagName('way')
+    else:
+        waylist = ac.widlist
+        if waylist == None:
+            waylist = []
 
-	for w in waylist:
-		if dom != None:
-			id = w.getAttribute('id')
-		else:
-			id = w # get it from the widlist
+    for w in waylist:
+        if dom != None:
+            id = w.getAttribute('id')
+        else:
+            id = w # get it from the widlist
 
-		ac.info('deleting way [id=%s]\n' % id)
-		url = "".join((ac.apiurl, 'way/', id))
+        ac.info('deleting way [id=%s]\n' % id)
+        url = "".join((ac.apiurl, 'way/', id))
 
-		putOrDeleteURL(ac, "DELETE", url, w)
+        putOrDeleteURL(ac, "DELETE", url, w)
 
-	# delete nodes
-	if dom != None:
-		nodelist = doc.getElementsByTagName('node')
-	else:
-		nodelist = ac.nidlist
-		if nodelist == None:
-			nodelist = []
+    # delete nodes
+    if dom != None:
+        nodelist = doc.getElementsByTagName('node')
+    else:
+        nodelist = ac.nidlist
+        if nodelist == None:
+            nodelist = []
 
-	for n in nodelist:
-		if dom != None:
-			id = n.getAttribute('id')
-		else:
-			id = n # get it from the nidlist
+    for n in nodelist:
+        if dom != None:
+            id = n.getAttribute('id')
+        else:
+            id = n # get it from the nidlist
 
-		ac.info('deleting node [id=%s]\n' % id)
-		url = "".join((ac.apiurl, 'node/', id))
+        ac.info('deleting node [id=%s]\n' % id)
+        url = "".join((ac.apiurl, 'node/', id))
 
-		putOrDeleteURL(ac, "DELETE", url, None)
+        putOrDeleteURL(ac, "DELETE", url, None)
 
 #-------------------------------------------------------------------------
 def main(argv):
-	ac = AppContext(argv)
-	managePassword(ac)
+    ac = AppContext(argv)
+    managePassword(ac)
 
-	if ac.mode == ac.MODE_GET:
-		if ac.usexapi:
-			get_xapi(ac)
-		else:
-			get(ac)
+    if ac.mode == ac.MODE_GET:
+        if ac.usexapi:
+            get_xapi(ac)
+        else:
+            get(ac)
 
-	elif ac.mode == ac.MODE_PUT:
-		put(ac)
+    elif ac.mode == ac.MODE_PUT:
+        put(ac)
 
-	elif ac.mode == ac.MODE_DELETE:
-		delete(ac)
+    elif ac.mode == ac.MODE_DELETE:
+        delete(ac)
 
-	else:
-		sys.stderr.write("unimplemented mode\n")
+    else:
+        sys.stderr.write("unimplemented mode\n")
 
-	return 0
+    return 0
 
 if __name__ == "__main__": sys.exit(main(sys.argv))
