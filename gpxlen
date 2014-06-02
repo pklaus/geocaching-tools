@@ -8,28 +8,6 @@ class AppInfo(object):
     def __init__(self):
         self.infilename = None
 
-def usageExit():
-    sys.stderr.write("usage: gpxlen infile\n")
-    sys.exit(1)
-
-def parseCommandLine(argv):
-    ai = AppInfo()
-
-    argv.pop(0)
-
-    while len(argv) > 0:
-        if ai.infilename == None:
-            ai.infilename = argv[0]
-        else:
-            usageExit()
-
-        argv.pop(0)
-
-    if ai.infilename == None:
-        usageExit()
-
-    return ai
-
 def getSegmentLength(segmentNode):
     t = 0.0
     oldLat = None
@@ -66,11 +44,14 @@ def getTrackLength(trackNode):
 
     return t
 
-def main(argv):
-    ai = parseCommandLine(argv)
+def main():
+    import argparse
 
-    dom = xml.dom.minidom.parse(ai.infilename)
+    parser = argparse.ArgumentParser(description='gpxloc calculates the length of each track in a GPX file')
+    parser.add_argument('infilename', metavar='INPUTFILE', help='GPX file to analyze')
+    args = parser.parse_args()
 
+    dom = xml.dom.minidom.parse(args.infilename)
     gpxNode = dom.firstChild
 
     for track in gpxNode.getElementsByTagName("trk"):
@@ -85,5 +66,5 @@ def main(argv):
 
     return 0
 
-if __name__ == "__main__": sys.exit(main(sys.argv))
+if __name__ == "__main__": sys.exit(main())
 
