@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+# requires Python3.4!
+
+import sys
+import math
+from statistics import mean, stdev
+import xml.dom.minidom
+import urllib.request
+
+def getPlaceName(latitude, longitude, zoom=12, language='en'):
+    """
+    Reverse Geocoding
+    http://wiki.openstreetmap.org/wiki/Nominatim
+    """
+    zoom = round(clamp(zoom, 0, 18)) # zoom must be an integer between 0..18
+    URL = "http://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&zoom={zoom:d}&accept-language={language}"
+    URL = URL.format(lat=latitude, lon=longitude, zoom=zoom, language=language)
+    try:
+        response = urllib.request.urlopen(URL)
+    except:
+        return "Cannot contact server"
+    dom = xml.dom.minidom.parse(response)
+    gpxNode = dom.firstChild
+    #return gpxNode.getElementsByTagName("city")[0].firstChild.data
+    return gpxNode.getElementsByTagName("result")[0].firstChild.data
+
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
+def getPointsOfSegment(segmentNode, points):
+    r = 6378100.0
+
+    for pt in segmentNode.getElementsByTagName("trkpt"):
+        lat = float(pt.getAttribute("lat"))
+        lon = float(pt.getAttribute("lon"))
+        try:
+            ele = pt.getElementsByTagName("ele")
+            ele = ele[0].firstChild.data
+            ele = float(ele)
+            points[2].append(ele)
+        except:
+            pass
+        points[0].append(lat)
+        points[1].append(lon)
+        lat, lon = lat * math.pi / 180., lon * math.pi/180.
+        points[3].append(r * math.cos(lon) * math.sin(90. - lat))
+        points[4].append(r * math.sin(lon) * math.sin(90. - lat))
+        points[5].append(r * math.sin(lat))
+
+def getTrackPointMeanValues(trackNode):
+    points = ([], [], [], [], [], []) # lat lon ele   x y z
+    for seg in trackNode.getElementsByTagName("trkseg"):
+        getPointsOfSegment(seg, points)
+
+    minv = (min(points[3]), min(points[4]), min(points[5]))
+    maxv = (max(points[3]), max(points[4]), max(points[5]))
+    return {
+        'meanlat': mean(points[0]),
+        'meanlon': mean(points[1]),
+        'meanelev': mean(points[2]),
+        'meanx': mean(points[3]),
+        'meany': mean(points[4]),
+        'meanz': mean(points[5]),
+        'stdev': (stdev(points[3])**2.0 + stdev(points[4])**2.0 + stdev(points[5])**2)**0.5,
+        'cubediagonal': ((minv[0]-maxv[0])**2.0 + (minv[1]-maxv[1])**2.0 + (minv[2]-maxv[2])**2)**0.5,
+    }
+
+def main(argv):
+    import argparse
+
+    parser = argparse.ArgumentParser(description='gpxloc tells you the center of gravity of all coordinates found in a GPX file.')
+    parser.add_argument('infilename', metavar='INPUTFILE', help='GPX file to analyze')
+    args = parser.parse_args()
+
+    try:
+        dom = xml.dom.minidom.parse(args.infilename)
+    except:
+        parser.error("Cannot read %s as GPX file." % args.infilename)
+    gpxNode = dom.firstChild
+
+    for track in gpxNode.getElementsByTagName("trk"):
+        nameNode = track.getElementsByTagName("name")
+        try:
+            name = nameNode[0].firstChild.data
+        except:
+            name = "<no name>"
+        tpmv = getTrackPointMeanValues(track)
+        sys.stdout.write('Track: "%s", ' % name)
+        sys.stdout.write('Lat: %.3f Lon: %.3f StDev: %.3f\n' % (tpmv['meanlat'], tpmv['meanlon'], tpmv['stdev']))
+        #zoom = 18000.0/tpmv['stdev']
+        zoom = 5
+        if tpmv['cubediagonal']   > 160000.: zoom = 5
+        elif tpmv['cubediagonal'] > 100000.: zoom = 6
+        elif tpmv['cubediagonal'] >  80000.: zoom = 7
+        elif tpmv['cubediagonal'] >  50000.: zoom = 8
+        elif tpmv['cubediagonal'] >  30000.: zoom = 9
+        elif tpmv['cubediagonal'] >  18000.: zoom = 10
+        elif tpmv['cubediagonal'] >  12000.: zoom = 11
+        elif tpmv['cubediagonal'] >   8000.: zoom = 12
+        elif tpmv['cubediagonal'] >   5000.: zoom = 14
+        elif tpmv['cubediagonal'] >   2000.: zoom = 15
+        elif tpmv['cubediagonal'] >   1000.: zoom = 16
+        elif tpmv['cubediagonal'] >    500.: zoom = 17
+        else: zoom = 18
+        #zoom = 50000.0/tpmv['cubediagonal']
+        zoom = clamp(zoom, 6, 18)
+        sys.stdout.write(' -> place name: %s\n' % getPlaceName(tpmv['meanlat'], tpmv['meanlon'], zoom=zoom))
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
