@@ -4,10 +4,6 @@ import sys
 import math
 import xml.dom.minidom
 
-class AppInfo(object):
-    def __init__(self):
-        self.infilename = None
-
 def getSegmentLength(segmentNode):
     t = 0.0
     oldLat = None
